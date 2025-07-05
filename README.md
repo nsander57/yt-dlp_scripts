@@ -23,3 +23,7 @@ You can either enter all of the info in one line in the following order:
 or you can simply type `download` with no arguments and you will be prompted for the link, start and end times, and target file name one at a time.
 
 To see these options in the command line type `download -h`
+
+### Notes
+
+`downloadp` forces you only to use the *prompting* system. `download` does both based on number of args given
