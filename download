@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Check if all arguments are provided
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 [link] [start time] [end time] [file name]"
+    exit 1
+fi
+
+# Assign arguments to variables
+LINK="$1"
+START_TIME="$2"
+END_TIME="$3"
+FILE_NAME="$4"
+
+# Define paths
+DOWNLOAD_PATH="$HOME/Downloads/${FILE_NAME}.webm"
+OUTPUT_PATH="$HOME/Downloads/${FILE_NAME}.mp4"
+
+# Debugging: Print the command to see if variables are correctly assigned
+echo "Running: yt-dlp --download-sections \"*$START_TIME-$END_TIME\" -o \"$DOWNLOAD_PATH\" \"$LINK\""
+
+# Download the specified section of the video
+yt-dlp --download-sections "*$START_TIME-$END_TIME" -o "$DOWNLOAD_PATH" "$LINK"
+
+# Check if download was successful
+if [ $? -ne 0 ]; then
+    echo "Error: yt-dlp failed to download the video."
+    exit 1
+fi
+
+# Convert to MP4 format
+echo "Converting to MP4..."
+ffmpeg -i "$DOWNLOAD_PATH" -c:v libx264 -c:a aac "$OUTPUT_PATH"
+
+echo "Download and conversion complete. File saved as: $OUTPUT_PATH"

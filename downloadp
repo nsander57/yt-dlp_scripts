@@ -1,0 +1,35 @@
+#!/bin/bash
+
+echo "enter url of video to download: "
+read LINK
+
+echo "Download Start Timestamp (hh:mm:ss): "
+read START_TIME
+
+echo "Download End Timestamp (hh:mm:ss): "
+read END_TIME
+
+echo "Name for File (script will add .mp4): "
+read FILE_NAME
+
+# Define paths
+DOWNLOAD_PATH="$HOME/Downloads/${FILE_NAME}.webm"
+OUTPUT_PATH="$HOME/Downloads/${FILE_NAME}.mp4"
+
+# Debugging: Print the command to see if variables are correctly assigned
+echo "Running: yt-dlp --download-sections \"*$START_TIME-$END_TIME\" -o \"$DOWNLOAD_PATH\" \"$LINK\""
+
+# Download the specified section of the video
+yt-dlp --download-sections "*$START_TIME-$END_TIME" -o "$DOWNLOAD_PATH" "$LINK"
+
+# Check if download was successful
+if [ $? -ne 0 ]; then
+    echo "Error: yt-dlp failed to download the video."
+    exit 1
+fi
+
+# Convert to MP4 format
+echo "Converting to MP4..."
+ffmpeg -i "$DOWNLOAD_PATH" -c:v libx264 -c:a aac "$OUTPUT_PATH"
+
+echo "Download and conversion complete. File saved as: $OUTPUT_PATH"
