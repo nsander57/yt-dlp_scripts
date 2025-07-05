@@ -2,15 +2,42 @@
 
 # Check if all arguments are provided
 if [ "$#" -ne 4 ]; then
-    echo "Usage: $0 [link] [start time] [end time] [file name]"
-    exit 1
-fi
 
-# Assign arguments to variables
-LINK="$1"
-START_TIME="$2"
-END_TIME="$3"
-FILE_NAME="$4"
+    # If there is at least one variable given, then check if it asking for help
+    if [ "$#" -ge 1 ]; then
+        if [ "$1" = "-help" -o "$1" = "-h" ]; then
+        echo "Usage:
+download [link] [start time] [end time] [file name]
+or
+fill out the prompts with just 'download'"
+        exit 0
+        fi
+        echo "please consult 'download -h' for help"
+        exit 1
+    fi
+    if [ "$#" -eq 0 ]; then
+        echo "enter url of video to download: "
+        read LINK
+
+        echo "Download Start Timestamp (hh:mm:ss): "
+        read START_TIME
+
+        echo "Download End Timestamp (hh:mm:ss): "
+        read END_TIME
+
+        echo "Name for File (script will add .mp4): "
+        read FILE_NAME
+    else
+        echo "please consult 'download -h' for help"
+        exit 1
+    fi
+else
+    # Assign arguments to variables
+    LINK="$1"
+    START_TIME="$2"
+    END_TIME="$3"
+    FILE_NAME="$4"
+fi
 
 # Define paths
 DOWNLOAD_PATH="$HOME/Downloads/${FILE_NAME}.webm"
