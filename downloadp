@@ -12,9 +12,13 @@ read END_TIME
 echo "Name for File (script will add .mp4): "
 read FILE_NAME
 
+echo "Output directory (leave blank for ~/Downloads): "
+read OUTPUT_DIR
+OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Downloads}"
+
 # Define paths
-DOWNLOAD_PATH="$HOME/Downloads/${FILE_NAME}.webm"
-OUTPUT_PATH="$HOME/Downloads/${FILE_NAME}.mp4"
+DOWNLOAD_PATH="${OUTPUT_DIR}/${FILE_NAME}.webm"
+OUTPUT_PATH="${OUTPUT_DIR}/${FILE_NAME}.mp4"
 
 # Debugging: Print the command to see if variables are correctly assigned
 echo "Running: yt-dlp --download-sections \"*$START_TIME-$END_TIME\" -o \"$DOWNLOAD_PATH\" \"$LINK\""
@@ -22,7 +26,6 @@ echo "Running: yt-dlp --download-sections \"*$START_TIME-$END_TIME\" -o \"$DOWNL
 # Download the specified section of the video
 yt-dlp --download-sections "*$START_TIME-$END_TIME" -o "$DOWNLOAD_PATH" "$LINK"
 
-# Check if download was successful
 if [ $? -ne 0 ]; then
     echo "Error: yt-dlp failed to download the video."
     exit 1
@@ -31,5 +34,12 @@ fi
 # Convert to MP4 format
 echo "Converting to MP4..."
 ffmpeg -i "$DOWNLOAD_PATH" -c:v libx264 -c:a aac "$OUTPUT_PATH"
+
+if [ $? -ne 0 ]; then
+    echo "Error: ffmpeg failed to convert the video."
+    exit 1
+fi
+
+rm "$DOWNLOAD_PATH"
 
 echo "Download and conversion complete. File saved as: $OUTPUT_PATH"
