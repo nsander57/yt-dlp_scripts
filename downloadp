@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [ -t 1 ]; then
+    RED='\033[0;31m'
+    NC='\033[0m'
+else
+    RED=''
+    NC=''
+fi
+
 validate_time() {
     local t="$1"
     [ -z "$t" ] && return 0
@@ -16,7 +24,7 @@ while true; do
     read START_TIME
     validate_time "$START_TIME"
     code=$?
-    [ $code -eq 1 ] && echo "Invalid format. Use hh:mm:ss or mm:ss." && continue
+    [ $code -eq 1 ] && printf "${RED}Invalid format. Use hh:mm:ss or mm:ss.${NC}\n" && continue
     [ $code -eq 2 ] && START_TIME="00:$START_TIME"
     break
 done
@@ -26,7 +34,7 @@ while true; do
     read END_TIME
     validate_time "$END_TIME"
     code=$?
-    [ $code -eq 1 ] && echo "Invalid format. Use hh:mm:ss or mm:ss." && continue
+    [ $code -eq 1 ] && printf "${RED}Invalid format. Use hh:mm:ss or mm:ss.${NC}\n" && continue
     [ $code -eq 2 ] && END_TIME="00:$END_TIME"
     break
 done
@@ -49,7 +57,7 @@ echo "Running: yt-dlp --download-sections \"*$START_TIME-$END_TIME\" -o \"$DOWNL
 yt-dlp --download-sections "*$START_TIME-$END_TIME" -o "$DOWNLOAD_PATH" "$LINK"
 
 if [ $? -ne 0 ]; then
-    echo "Error: yt-dlp failed to download the video."
+    printf "${RED}Error: yt-dlp failed to download the video.${NC}\n"
     exit 1
 fi
 
@@ -58,7 +66,7 @@ echo "Converting to MP4..."
 ffmpeg -i "$DOWNLOAD_PATH" -c:v libx264 -c:a aac "$OUTPUT_PATH"
 
 if [ $? -ne 0 ]; then
-    echo "Error: ffmpeg failed to convert the video."
+    printf "${RED}Error: ffmpeg failed to convert the video.${NC}\n"
     exit 1
 fi
 
