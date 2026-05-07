@@ -1,13 +1,35 @@
 #!/bin/bash
 
+validate_time() {
+    local t="$1"
+    [ -z "$t" ] && return 0
+    echo "$t" | grep -qE '^[0-9]{1,2}:[0-9]{2}:[0-9]{2}$' && return 0
+    echo "$t" | grep -qE '^[0-9]{1,2}:[0-9]{2}$' && return 2
+    return 1
+}
+
 echo "enter url of video to download: "
 read LINK
 
-echo "Download Start Timestamp (hh:mm:ss): "
-read START_TIME
+while true; do
+    echo "Download Start Timestamp (hh:mm:ss or mm:ss): "
+    read START_TIME
+    validate_time "$START_TIME"
+    code=$?
+    [ $code -eq 1 ] && echo "Invalid format. Use hh:mm:ss or mm:ss." && continue
+    [ $code -eq 2 ] && START_TIME="00:$START_TIME"
+    break
+done
 
-echo "Download End Timestamp (hh:mm:ss): "
-read END_TIME
+while true; do
+    echo "Download End Timestamp (hh:mm:ss or mm:ss): "
+    read END_TIME
+    validate_time "$END_TIME"
+    code=$?
+    [ $code -eq 1 ] && echo "Invalid format. Use hh:mm:ss or mm:ss." && continue
+    [ $code -eq 2 ] && END_TIME="00:$END_TIME"
+    break
+done
 
 echo "Name for File (script will add .mp4): "
 read FILE_NAME
