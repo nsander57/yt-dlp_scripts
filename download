@@ -1,0 +1,126 @@
+#!/bin/bash
+
+validate_time() {
+    local t="$1"
+    [ -z "$t" ] && return 0
+    echo "$t" | grep -qE '^[0-9]{1,2}:[0-9]{2}:[0-9]{2}$' && return 0
+    echo "$t" | grep -qE '^[0-9]{1,2}:[0-9]{2}$' && return 2
+    return 1
+}
+
+# Check if all arguments are provided
+if [ "$#" -ge 4 ] && [ "$#" -le 5 ]; then
+    LINK="$1"
+    START_TIME="$2"
+    END_TIME="$3"
+    FILE_NAME="$4"
+    OUTPUT_DIR="${5:-$HOME/Downloads}"
+
+    validate_time "$START_TIME"
+    case $? in
+      1) echo "Error: start time '$START_TIME' is not a valid timestamp. Use hh:mm:ss or mm:ss." ; exit 1 ;;
+      2) START_TIME="00:$START_TIME" ;;
+    esac
+
+    validate_time "$END_TIME"
+    case $? in
+      1) echo "Error: end time '$END_TIME' is not a valid timestamp. Use hh:mm:ss or mm:ss." ; exit 1 ;;
+      2) END_TIME="00:$END_TIME" ;;
+    esac
+
+elif [ "$#" -eq 0 ]; then
+    echo '
+#         xxx    xxx
+#        x   x  x   x
+#         xxx    xxx
+#        ┌───────────┐
+#        │           ├─┌─┐
+#        │           │ │ │
+#        │           ├─└─┘
+#        │           │
+#        └───────────┘
+#            /   \
+#           /     \
+#          /       \
+    '
+
+    echo "enter url of video to download: "
+    read LINK
+
+    while true; do
+        echo "Download Start Timestamp (hh:mm:ss or mm:ss, leave blank for start of video): "
+        read START_TIME
+        validate_time "$START_TIME"
+        code=$?
+        [ $code -eq 1 ] && echo "Invalid format. Use hh:mm:ss or mm:ss." && continue
+        [ $code -eq 2 ] && START_TIME="00:$START_TIME"
+        break
+    done
+
+    while true; do
+        echo "Download End Timestamp (hh:mm:ss or mm:ss, leave blank for end of video): "
+        read END_TIME
+        validate_time "$END_TIME"
+        code=$?
+        [ $code -eq 1 ] && echo "Invalid format. Use hh:mm:ss or mm:ss." && continue
+        [ $code -eq 2 ] && END_TIME="00:$END_TIME"
+        break
+    done
+
+    echo "Name for File (script will add .mp4): "
+    read FILE_NAME
+
+    echo "Output directory (leave blank for ~/Downloads): "
+    read OUTPUT_DIR
+    OUTPUT_DIR="${OUTPUT_DIR:-$HOME/Downloads}"
+else
+    if [ "$1" = "-help" -o "$1" = "-h" ]; then
+        echo "Usage:
+download [link] [start time] [end time] [file name] [output dir (optional)]
+or
+fill out the prompts with just 'download'"
+        exit 0
+    fi
+    echo "please consult 'download -h' for help"
+    exit 1
+fi
+
+# Define paths
+DOWNLOAD_PATH="${OUTPUT_DIR}/${FILE_NAME}.webm"
+OUTPUT_PATH="${OUTPUT_DIR}/${FILE_NAME}.mp4"
+
+# Checking if user defined START_TIME and END_TIME
+if [ -z "$START_TIME" ]; then
+    # no start time defined
+    START_TIME="00:00:00"
+fi
+if [ -z "$END_TIME" ]; then
+    # no end time defined
+    END_TIME="inf"
+fi
+
+
+
+# Debugging: Print the command to see if variables are correctly assigned
+echo "Running: yt-dlp --download-sections \"*$START_TIME-$END_TIME\" -o \"$DOWNLOAD_PATH\" \"$LINK\""
+
+# Download the specified section of the video
+yt-dlp --download-sections "*$START_TIME-$END_TIME" -o "$DOWNLOAD_PATH" "$LINK"
+
+if [ $? -ne 0 ]; then
+    echo "Error: yt-dlp failed to download the video."
+    exit 1
+fi
+
+# Convert to MP4 format
+echo "Converting to MP4..."
+ffmpeg -i "$DOWNLOAD_PATH" -c:v libx264 -c:a aac "$OUTPUT_PATH"
+
+if [ $? -ne 0 ]; then
+    echo "Error: ffmpeg failed to convert the video."
+    exit 1
+fi
+
+rm "$DOWNLOAD_PATH"
+
+echo "Download and conversion complete. File saved as: $OUTPUT_PATH"
